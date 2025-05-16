@@ -35,19 +35,54 @@ function App() {
   const [topic, setTopic] = useState("machine learning");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState('India');
+  const [maxResults, setMaxResults] = useState(10);
+  const [startYear, setStartYear] = useState('');
+  const [endYear, setEndYear] = useState('');
 
   const handleSearch = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.post("http://localhost:5000/api/search", {
+  try {
+    const response = await axios.post('http://localhost:5000/api/search', { 
         topic,
-      });
-      setResults(response.data);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
+        country,
+        maxResults,
+        startYear,
+        endYear
+      }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    setResults(response.data);
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "response" in error) {
+      // @ts-ignore
+      console.error("Server Error:", (error as any).response.data);
+    } else if (typeof error === "object" && error !== null && "message" in error) {
+      // @ts-ignore
+      console.error("Network Error:", (error as any).message);
+    } else {
+      console.error("An unknown error occurred:", error);
     }
-    setLoading(false);
-  };
+  }
+};
+
+  // const handleSearch = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.post('http://localhost:5000/api/search', { 
+  //       topic,
+  //       country,
+  //       maxResults,
+  //       startYear,
+  //       endYear
+  //     });
+  //     setResults(response.data);
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //   }
+  //   setLoading(false);
+  // };
 
   return (
     <ThemeProvider theme={theme}>
@@ -63,14 +98,50 @@ function App() {
           India PubMed Summarizer
         </Typography>
 
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
         <TextField
-          fullWidth
-          label="Search Topic"
+          label="Topic"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          variant="outlined"
-          margin="normal"
+          fullWidth
         />
+        
+        <TextField
+          label="Country"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          select
+          SelectProps={{ native: true }}
+        >
+          <option value="India">India</option>
+          <option value="China">China</option>
+          <option value="USA">USA</option>
+        </TextField>
+
+        <TextField
+          label="Max Results"
+          type="number"
+          value={maxResults}
+          onChange={(e) => setMaxResults(Math.min(100, parseInt(e.target.value) || 10))}
+          inputProps={{ min: 1, max: 100 }}
+        />
+
+        <TextField
+          label="Start Year"
+          type="number"
+          value={startYear}
+          onChange={(e) => setStartYear(e.target.value)}
+          inputProps={{ min: 1900, max: new Date().getFullYear() }}
+        />
+
+        <TextField
+          label="End Year"
+          type="number"
+          value={endYear}
+          onChange={(e) => setEndYear(e.target.value)}
+          inputProps={{ min: 1900, max: new Date().getFullYear() }}
+        />
+      </div>
 
         <Button
           variant="contained"
